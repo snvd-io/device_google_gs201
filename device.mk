@@ -910,10 +910,8 @@ $(call inherit-product-if-exists, vendor/samsung_slsi/telephony/$(BOARD_USES_SHA
 
 PRODUCT_PACKAGES += ShannonIms
 
-#RCS Test Messaging App
 PRODUCT_PACKAGES_DEBUG += \
-	preinstalled-packages-product-gs201-device-debug.xml \
-	TestRcsApp
+	preinstalled-packages-product-gs201-device-debug.xml
 
 PRODUCT_PACKAGES += ShannonRcs
 endif
@@ -987,6 +985,7 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
 #$(call inherit-product-if-exists, vendor/google_devices/common/exynos-vendor.mk)
 #$(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4375/device-bcm.mk)
 include device/google/gs-common/sensors/sensors.mk
+$(call soong_config_set,usf,target_soc,gs201)
 
 PRODUCT_COPY_FILES += \
 	device/google/gs201/default-permissions.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions.xml \
