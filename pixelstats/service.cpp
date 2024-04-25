@@ -92,21 +92,22 @@ const struct SysfsCollector::SysfsPaths sysfs_paths = {
         "/sys/class/power_supply/maxfg/gmsr",
         "/sys/class/power_supply/maxfg_base/gmsr",
     },
-    .TotalCallCountPath = "/sys/devices/platform/audiometrics/call_count"
+    .FGLearningPath = {
+        "/sys/class/power_supply/maxfg/fg_learning_events",
+        "/sys/class/power_supply/maxfg_base/fg_learning_events"
+    },
+    .FGModelLoadingPath = {
+        "/sys/class/power_supply/maxfg/m5_model_state",
+        "/sys/class/power_supply/maxfg_base/m5_model_state"
+    },
+    .TotalCallCountPath = "/sys/devices/platform/audiometrics/call_count",
+    .FGLogBufferPath = "/dev/logbuffer_maxfg_monitor"
 };
 
 const struct UeventListener::UeventPaths ueventPaths = {
         .AudioUevent = "/devices/virtual/amcs/amcs",
         .TypeCPartnerUevent = "PRODUCT_TYPE=",
-        .FGLearningPath = {
-            "/sys/class/power_supply/maxfg/fg_learning_events",
-            "/sys/class/power_supply/maxfg_base/fg_learning_events"
-        },
-        .FwUpdatePath = "",
-        .FGModelLoadingPath = {
-            "/sys/class/power_supply/maxfg/m5_model_state",
-            "/sys/class/power_supply/maxfg_base/m5_model_state"
-        }
+        .FwUpdatePath = ""
 };
 
 int main() {
