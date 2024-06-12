@@ -1273,7 +1273,7 @@ static int WriteStringToFileOrLog(string val, string path) {
     return 0;
 }
 
-static ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
+ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
     if (mUsb->mI2cClientPath.empty()) {
         mUsb->mI2cClientPath = getI2cClientPath(kHsi2cPath, kTcpcDevName, kI2cClientId);
         if (mUsb->mI2cClientPath.empty()) {
