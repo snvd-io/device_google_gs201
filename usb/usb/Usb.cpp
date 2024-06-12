@@ -1278,7 +1278,7 @@ static ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_stat
         mUsb->mI2cClientPath = getI2cClientPath(kHsi2cPath, kTcpcDevName, kI2cClientId);
         if (mUsb->mI2cClientPath.empty()) {
             ALOGE("%s: Unable to locate i2c bus node", __func__);
-            return Status::ERROR;
+            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_NO_I2C_PATH);
         }
     }
 
