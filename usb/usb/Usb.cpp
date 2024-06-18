@@ -94,6 +94,7 @@ constexpr char kThermalZoneForTempReadSecondary1[] = "usb_pwr_therm";
 constexpr char kThermalZoneForTempReadSecondary2[] = "qi_therm";
 constexpr char kPogoUsbActive[] = "/sys/devices/platform/google,pogo/pogo_usb_active";
 constexpr char KPogoMoveDataToUsb[] = "/sys/devices/platform/google,pogo/move_data_to_usb";
+constexpr char kPogoChargingOnly[] = "/sys/devices/platform/google,pogo/charging_only";
 constexpr char kPowerSupplyUsbType[] = "/sys/class/power_supply/usb/usb_type";
 constexpr char kUdcUeventRegex[] =
     "/devices/platform/11210000.usb/11210000.dwc3/udc/11210000.dwc3";
@@ -1290,28 +1291,32 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
     switch (in_state) {
         case PortSecurityState::DISABLED: {
             if (WriteStringToFileOrLog("0", ccToggleEnablePath)
-                    & WriteStringToFileOrLog("0", dataPathEnablePath)) {
+                    & WriteStringToFileOrLog("0", dataPathEnablePath)
+                    & WriteStringToFileOrLog("2", string(kPogoChargingOnly))) {
                 return ScopedAStatus::ok();
             }
             return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
         }
         case PortSecurityState::CHARGING_ONLY_IMMEDIATE: {
             if (WriteStringToFileOrLog("0", dataPathEnablePath)
-                    & WriteStringToFileOrLog("1", ccToggleEnablePath)) {
+                    & WriteStringToFileOrLog("1", ccToggleEnablePath)
+                    & WriteStringToFileOrLog("2", string(kPogoChargingOnly))) {
                 return ScopedAStatus::ok();
             }
             return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
         }
         case PortSecurityState::CHARGING_ONLY: {
             if (WriteStringToFileOrLog("-1", dataPathEnablePath)
-                    & WriteStringToFileOrLog("1", ccToggleEnablePath)) {
+                    & WriteStringToFileOrLog("1", ccToggleEnablePath)
+                    & WriteStringToFileOrLog("1", string(kPogoChargingOnly))) {
                 return ScopedAStatus::ok();
             }
             return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
         }
         case PortSecurityState::ENABLED: {
             if (WriteStringToFileOrLog("1", dataPathEnablePath)
-                    & WriteStringToFileOrLog("1", ccToggleEnablePath)) {
+                    & WriteStringToFileOrLog("1", ccToggleEnablePath)
+                    & WriteStringToFileOrLog("0", string(kPogoChargingOnly))) {
                 return ScopedAStatus::ok();
             }
             return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
