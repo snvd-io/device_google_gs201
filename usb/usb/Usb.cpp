@@ -1287,7 +1287,11 @@ int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
     string ccToggleEnablePath = mUsb->mI2cClientPath + kCcToggleEnable;
     string dataPathEnablePath = mUsb->mI2cClientPath + kDataPathEnable;
 
-    string denyNewUsbProp = "security.deny_new_usb2";
+    bool denyNewUsbWriteResult = SetProperty("security.deny_new_usb2",
+                                             in_state == PortSecurityState::ENABLED ? "0" : "1");
+    if (!denyNewUsbWriteResult) {
+        ALOGE("unable to update security.deny_new_usb2 sysprop");
+    }
 
     bool hasPogo = access(kPogoChargingOnly, F_OK) == 0;
 
@@ -1298,10 +1302,7 @@ int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
             if (WriteStringToFileOrLog("0", ccToggleEnablePath)
                     & WriteStringToFileOrLog("0", dataPathEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
-                if (!SetProperty(denyNewUsbProp, "1")) {
-                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
-                }
-                return IUsbExt::NO_ERROR;
+                break;
             }
             return IUsbExt::ERROR_FILE_WRITE;
         }
@@ -1309,10 +1310,7 @@ int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
             if (WriteStringToFileOrLog("0", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
-                if (!SetProperty(denyNewUsbProp, "1")) {
-                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE);
-                }
-                return IUsbExt::NO_ERROR;
+                break;
             }
             return IUsbExt::ERROR_FILE_WRITE;
         }
@@ -1320,10 +1318,7 @@ int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
             if (WriteStringToFileOrLog("-1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("1", string(kPogoChargingOnly)))) {
-                if (!SetProperty(denyNewUsbProp, "1")) {
-                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
-                }
-                return IUsbExt::NO_ERROR;
+                break;
             }
             return IUsbExt::ERROR_FILE_WRITE;
         }
@@ -1331,13 +1326,14 @@ int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
             if (WriteStringToFileOrLog("1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("0", string(kPogoChargingOnly)))) {
-                if (!SetProperty(denyNewUsbProp, "0")) {
-                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
-                }
-                return IUsbExt::NO_ERROR;
+                break;
             }
             return IUsbExt::ERROR_FILE_WRITE;
         }
+    }
+
+    if (!denyNewUsbWriteResult) {
+        return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
     }
 
     return IUsbExt::NO_ERROR;
