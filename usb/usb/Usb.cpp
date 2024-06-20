@@ -1289,13 +1289,15 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
 
     string denyNewUsbProp = "security.deny_new_usb2";
 
+    bool hasPogo = access(kPogoChargingOnly, F_OK) == 0;
+
     // '&' is used instead of '&&' intentionally to disable short-circuit evaluation
 
     switch (in_state) {
         case PortSecurityState::DISABLED: {
             if (WriteStringToFileOrLog("0", ccToggleEnablePath)
                     & WriteStringToFileOrLog("0", dataPathEnablePath)
-                    & WriteStringToFileOrLog("2", string(kPogoChargingOnly))) {
+                    & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
                     return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
                 }
@@ -1306,7 +1308,7 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
         case PortSecurityState::CHARGING_ONLY_IMMEDIATE: {
             if (WriteStringToFileOrLog("0", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
-                    & WriteStringToFileOrLog("2", string(kPogoChargingOnly))) {
+                    & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
                     return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
                 }
@@ -1317,7 +1319,7 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
         case PortSecurityState::CHARGING_ONLY: {
             if (WriteStringToFileOrLog("-1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
-                    & WriteStringToFileOrLog("1", string(kPogoChargingOnly))) {
+                    & (!hasPogo || WriteStringToFileOrLog("1", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
                     return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
                 }
@@ -1328,7 +1330,7 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
         case PortSecurityState::ENABLED: {
             if (WriteStringToFileOrLog("1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
-                    & WriteStringToFileOrLog("0", string(kPogoChargingOnly))) {
+                    & (!hasPogo || WriteStringToFileOrLog("0", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "0")) {
                     return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
                 }
