@@ -107,14 +107,15 @@ struct Usb : public BnUsb {
     pthread_t mUsbHost;
 };
 
+using ext::IPortSecurityStateCallback;
 using ext::PortSecurityState;
 
 struct UsbExt : public ext::BnUsbExt {
     UsbExt(std::shared_ptr<Usb> usb);
 
-    ScopedAStatus setPortSecurityState(const std::string& in_portName,
-                                       PortSecurityState in_state) override;
-    ScopedAStatus setPortSecurityStateInner(PortSecurityState in_state);
+    ScopedAStatus setPortSecurityState(const std::string& in_portName, PortSecurityState in_state,
+            const shared_ptr<IPortSecurityStateCallback>& in_callback) override;
+    int setPortSecurityStateInner(PortSecurityState in_state);
 
     std::shared_ptr<Usb> mUsb;
 };
