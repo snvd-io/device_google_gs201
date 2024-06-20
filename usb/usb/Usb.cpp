@@ -1275,12 +1275,12 @@ static int WriteStringToFileOrLog(string val, string path) {
     return 0;
 }
 
-ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
+int UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
     if (mUsb->mI2cClientPath.empty()) {
         mUsb->mI2cClientPath = getI2cClientPath(kHsi2cPath, kTcpcDevName, kI2cClientId);
         if (mUsb->mI2cClientPath.empty()) {
             ALOGE("%s: Unable to locate i2c bus node", __func__);
-            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_NO_I2C_PATH);
+            return IUsbExt::ERROR_NO_I2C_PATH;
         }
     }
 
@@ -1299,48 +1299,48 @@ ScopedAStatus UsbExt::setPortSecurityStateInner(PortSecurityState in_state) {
                     & WriteStringToFileOrLog("0", dataPathEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
-                    return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
+                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
                 }
-                return ScopedAStatus::ok();
+                return IUsbExt::NO_ERROR;
             }
-            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
+            return IUsbExt::ERROR_FILE_WRITE;
         }
         case PortSecurityState::CHARGING_ONLY_IMMEDIATE: {
             if (WriteStringToFileOrLog("0", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("2", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
-                    return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
+                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE);
                 }
-                return ScopedAStatus::ok();
+                return IUsbExt::NO_ERROR;
             }
-            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
+            return IUsbExt::ERROR_FILE_WRITE;
         }
         case PortSecurityState::CHARGING_ONLY: {
             if (WriteStringToFileOrLog("-1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("1", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "1")) {
-                    return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
+                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
                 }
-                return ScopedAStatus::ok();
+                return IUsbExt::NO_ERROR;
             }
-            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
+            return IUsbExt::ERROR_FILE_WRITE;
         }
         case PortSecurityState::ENABLED: {
             if (WriteStringToFileOrLog("1", dataPathEnablePath)
                     & WriteStringToFileOrLog("1", ccToggleEnablePath)
                     & (!hasPogo || WriteStringToFileOrLog("0", string(kPogoChargingOnly)))) {
                 if (!SetProperty(denyNewUsbProp, "0")) {
-                    return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_DENY_NEW_USB_WRITE);
+                    return IUsbExt::ERROR_DENY_NEW_USB_WRITE;
                 }
-                return ScopedAStatus::ok();
+                return IUsbExt::NO_ERROR;
             }
-            return ScopedAStatus::fromServiceSpecificError(IUsbExt::ERROR_FILE_WRITE);
+            return IUsbExt::ERROR_FILE_WRITE;
         }
     }
 
-    return ScopedAStatus::ok();
+    return IUsbExt::NO_ERROR;
 }
 
 // keep in sync with frameworks/base/core/java/android/ext/settings/UsbPortSecurity.java
@@ -1367,8 +1367,12 @@ UsbExt::UsbExt(std::shared_ptr<Usb> usb) : mUsb(usb) {
 }
 
 ScopedAStatus UsbExt::setPortSecurityState(const std::string& in_portName,
-        PortSecurityState in_state) {
-    return setPortSecurityStateInner(in_state);
+        PortSecurityState in_state, const shared_ptr<IPortSecurityStateCallback>& in_callback) {
+    int res = setPortSecurityStateInner(in_state);
+    if (in_callback != nullptr) {
+        in_callback->onSetPortSecurityStateCompleted(res, 0, "");
+    }
+    return ScopedAStatus::ok();
 }
 
 } // namespace usb
